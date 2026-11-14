@@ -34,4 +34,15 @@ public class GlobalExceptionHandler {
 		//}
 	}
 	
+	@ExceptionHandler(IllegalArgumentException.class)
+	public ResponseEntity<Map<String, String>> handleIllegalArgumentException(
+	        IllegalArgumentException ex) {
+
+	    Map<String, String> error = Map.of(
+	            "error", ex.getMessage()
+	    );
+
+	    return ResponseEntity.badRequest().body(error);
+	}
+	
 }

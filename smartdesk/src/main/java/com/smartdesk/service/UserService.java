@@ -1,66 +1,107 @@
+
 package com.smartdesk.service;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.smartdesk.dto.UserRequest;
+import com.smartdesk.dto.UserResponse;
 import com.smartdesk.entity.User;
 import com.smartdesk.exception.DuplicateResourceException;
 import com.smartdesk.exception.ResourceNotFoundException;
+import com.smartdesk.mapper.UserMapper;
 import com.smartdesk.repository.UserRepository;
-
 
 @Service
 public class UserService {
 
-	@Autowired
-	private final UserRepository userRepository;
-	
-	public UserService(UserRepository userRepository) {
-		this.userRepository = userRepository;
-	}
-	
-	@Transactional
-	public User registerUser(User user) {
-		if(userRepository.existsByEmail(user.getEmail())) {
-			throw new DuplicateResourceException("Email already exists: " + user.getEmail());
-		}
-		
-		return userRepository.save(user);
-	}
-	
-	@Transactional(readOnly = true)
-	public User getUserById(Long id) {
-		return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
-	}
-	
-	@Transactional(readOnly = true)
-	public List<User> getAllUsers(){
-		return userRepository.findAll();
-	}
-	
-	@Transactional
-	public User updateUser(Long id, User user) {
-		User exisitngUser =  userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found with this id: "+id));
-		
-		if(userRepository.existsByEmail(user.getEmail()) && !exisitngUser.getEmail().equalsIgnoreCase(user.getEmail())) {
-			throw new DuplicateResourceException("Email already exists: " + user.getEmail());
-			
-		}
-		
-		exisitngUser.setFullName(user.getFullName());
-		exisitngUser.setEmail(user.getEmail());
-		return userRepository.save(exisitngUser);
-	}
-	@Transactional
-	public void deleteUser(Long id) {
-		
-		if(!userRepository.existsById(id)) {
-			throw new ResourceNotFoundException("User not found with this id: "+id);
-		}
-		userRepository.deleteById(id);
-	}
-	
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
+
+    public UserService(UserRepository userRepository,
+                       UserMapper userMapper) {
+        this.userRepository = userRepository;
+        this.userMapper = userMapper;
+    }
+
+    @Transactional
+    public UserResponse registerUser(UserRequest request) {
+
+        User user = userMapper.toEntity(request);
+
+        if (userRepository.existsByEmail(user.getEmail())) {
+            throw new DuplicateResourceException(
+                "Email already exists: " + user.getEmail()
+            );
+        }
+
+        User savedUser = userRepository.save(user);
+
+        return userMapper.toResponse(savedUser);
+    }
+
+    @Transactional(readOnly = true)
+    public UserResponse getUserById(Long id) {
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() ->
+                    new ResourceNotFoundException(
+                        "User not found with id: " + id
+                    )
+                );
+
+        return userMapper.toResponse(user);
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserResponse> getAllUsers() {
+
+        return userRepository.findAll()
+                .stream()
+                .map(userMapper::toResponse)
+                .toList();
+    }
+
+    @Transactional
+    public UserResponse updateUser(Long id, UserRequest request) {
+
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() ->
+                    new ResourceNotFoundException(
+                        "User not found with id: " + id
+                    )
+                );
+
+        if (userRepository.existsByEmail(request.getEmail())
+                && !existingUser.getEmail()
+                    .equalsIgnoreCase(request.getEmail())) {
+
+            throw new DuplicateResourceException(
+                "Email already exists: " + request.getEmail()
+            );
+        }
+
+        User updatedDetails = userMapper.toEntity(request);
+
+        existingUser.setFullName(updatedDetails.getFullName());
+        existingUser.setEmail(updatedDetails.getEmail());
+
+        User savedUser = userRepository.save(existingUser);
+
+        return userMapper.toResponse(savedUser);
+    }
+
+    @Transactional
+    public void deleteUser(Long id) {
+
+        if (!userRepository.existsById(id)) {
+            throw new ResourceNotFoundException(
+                "User not found with id: " + id
+            );
+        }
+
+        userRepository.deleteById(id);
+    }
 }
