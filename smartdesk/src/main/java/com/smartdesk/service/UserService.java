@@ -3,9 +3,11 @@ package com.smartdesk.service;
 
 import java.util.List;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.smartdesk.dto.UserRegistrationRequest;
 import com.smartdesk.dto.UserRequest;
 import com.smartdesk.dto.UserResponse;
 import com.smartdesk.entity.User;
@@ -19,15 +21,17 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     public UserService(UserRepository userRepository,
-                       UserMapper userMapper) {
+                       UserMapper userMapper, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
+		this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
-    public UserResponse registerUser(UserRequest request) {
+    public UserResponse registerUser(UserRegistrationRequest request) {
 
         User user = userMapper.toEntity(request);
 
@@ -36,6 +40,9 @@ public class UserService {
                 "Email already exists: " + user.getEmail()
             );
         }
+
+        // Hash the password before saving
+        user.setPassword(passwordEncoder.encode(request.getPassword())); //spring registered the bean in its IoC, the one we had configured in SecurityConfig.java. encode() is a method defined by the PasswordEncoder interface and implemented by BCryptPasswordEncoder.
 
         User savedUser = userRepository.save(user);
 

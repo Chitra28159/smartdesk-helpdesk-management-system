@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.smartdesk.dto.UserRegistrationRequest;
 import com.smartdesk.dto.UserRequest;
 import com.smartdesk.dto.UserResponse;
 import com.smartdesk.service.UserService;
@@ -43,9 +44,9 @@ public class UserController {
 
 	@PostMapping("")
 	public ResponseEntity<UserResponse> registerUser(
-	        @Valid @RequestBody UserRequest requestUser) {
+	        @Valid @RequestBody UserRegistrationRequest request) {
 	
-	    UserResponse savedUser = userService.registerUser(requestUser);
+	    UserResponse savedUser = userService.registerUser(request);
 	
 	    URI location = ServletUriComponentsBuilder
 	            .fromCurrentRequest()

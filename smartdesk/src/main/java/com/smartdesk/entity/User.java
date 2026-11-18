@@ -20,6 +20,8 @@ public class User {
 	@Column(name = "full_name", nullable = false)
 	private String fullName;
 	
+	@Column(name = "password")
+	private String password;
 //	@NotBlank(message = "Email is required") commenting caz the validation is already done in the DTO layer
 //	@Email(message = "Email should be valid") commenting caz the validation is already done in the DTO layer
 	@Column(nullable = false, unique = true)
@@ -49,7 +51,13 @@ public class User {
 	public void setEmail(String email) {
 		this.email = email;
 	}
-	
+	public String getPassword() {
+	    return password;
+	}
+
+	public void setPassword(String password) {
+	    this.password = password;
+	}
 //	public User(Long id, String fullName, String email) {
 //		super(); // Call to the superclass constructor means that this constructor is calling the constructor of the superclass (in this case, Object) before executing its own code. This is done to ensure that any initialization in the superclass is performed before the subclass's constructor logic is executed.
 //		this.id = id;
